@@ -44,6 +44,7 @@ class Seats(models.Model):
 
 class Show(models.Model):
     start_time = models.DateTimeField()
+    cost = models.IntegerField()
     hall = models.ForeignKey(Halls,on_delete=models.CASCADE)
     movie = models.ForeignKey(Movies,on_delete=models.CASCADE)
 
