@@ -51,5 +51,8 @@ class Show(models.Model):
     @staticmethod
     def end_time(self):
         return self.start_time + self.movie.duration
+
+    def __str__(self) -> str:
+        return self.movie.__str__ ()+ "-" + self.hall.__str__ () +": " + self.start_time.strftime("%Y-%m-%d_%H:%M:%S")
     
 
