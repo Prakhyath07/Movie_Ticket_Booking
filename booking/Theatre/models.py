@@ -23,7 +23,12 @@ class Theatre(models.Model):
 class Halls(models.Model):
     name = models.CharField(max_length=20)
     theatre = models.ForeignKey(Theatre,on_delete= models.CASCADE)
-    models.UniqueConstraint((name,theatre), name="unique_hall")
+    
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['name','theatre'], name="unique_hall")
+        ]
 
     def __str__(self) -> str:
         return self.theatre.name +":" + self.name
@@ -38,6 +43,11 @@ class Seats(models.Model):
     row = models.IntegerField()
     column = models.CharField(max_length=3,choices=COLUMN_CHOICES)
     hall = models.ForeignKey(Halls,on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['number','row','column','hall'], name="unique_seat")
+        ]
 
     def __str__(self) -> str:
         return self.column + str(self.row) + '-' + str(self.number)

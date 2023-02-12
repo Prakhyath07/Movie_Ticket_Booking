@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from .models import Movies,Theatre,Halls,Seats,Show
-from .serializers import MovieSerializer, TheatreSerializer,HallsSerializer,SeatsSerializer,ShowSerializer
+from .serializers import (MovieSerializer, TheatreSerializer,HallsSerializer,
+                        SeatsSerializer,ShowSerializer,LayoutCreateSerializer)
 from rest_framework import generics
 
 # Create your views here.
@@ -24,5 +25,9 @@ class SeatsList(generics.ListCreateAPIView):
 class ShowsList(generics.ListCreateAPIView):
     queryset = Show.objects.all()
     serializer_class = ShowSerializer
+
+class LayoutList(generics.CreateAPIView):
+    queryset = Seats.objects.all()
+    serializer_class = LayoutCreateSerializer
 
 

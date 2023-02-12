@@ -9,4 +9,5 @@ urlpatterns = [
     path("theatres/", views.TheatresList.as_view(), name="theatres-list"),
     path("seats/", views.SeatsList.as_view(), name="seats-list"),
     path("halls/", views.HallsList.as_view(), name="halls-list"),
+    path("layout/", views.LayoutList.as_view(), name="layout-list"),
 ]
