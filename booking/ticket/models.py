@@ -7,7 +7,6 @@ from Theatre.models import Seats,Show
 class tickets(models.Model):
     show = models.ForeignKey(Show,on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    count = models.IntegerField()
 
     def __str__(self) -> str:
         return self.show.__str__() + "-" + self.user.username
@@ -17,6 +16,7 @@ class seat_reserved(models.Model):
     seat = models.ForeignKey(Seats,on_delete=models.CASCADE)
     show = models.ForeignKey(Show,on_delete=models.CASCADE)
     tickets = models.ForeignKey(tickets,on_delete=models.CASCADE)
+    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL)
 
     class Meta:
         constraints = [

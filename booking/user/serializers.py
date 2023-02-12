@@ -3,6 +3,12 @@ from rest_framework import serializers
 from django.contrib.auth.models import User, Group
 
 
+
+class UserPublicSerializer(serializers.Serializer):
+
+    username = serializers.CharField(read_only = True)
+    id = serializers.IntegerField(read_only = True)
+
 # User Serializer
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

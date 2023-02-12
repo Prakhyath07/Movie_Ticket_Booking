@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 class Movies(models.Model):
@@ -9,6 +10,7 @@ class Movies(models.Model):
     title = models.CharField(max_length=100,unique=True)
     language = models.CharField(max_length=20,choices=LANGUAGE_CHOICES)
     duration = models.DurationField()
+    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL)
 
     def __str__(self) -> str:
         return self.title
@@ -16,6 +18,7 @@ class Movies(models.Model):
 class Theatre(models.Model):
     name = models.CharField(max_length=20, unique=True)
     location = models.CharField(max_length=20)
+    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL)
 
     def __str__(self) -> str:
         return self.name
@@ -23,6 +26,7 @@ class Theatre(models.Model):
 class Halls(models.Model):
     name = models.CharField(max_length=20)
     theatre = models.ForeignKey(Theatre,on_delete= models.CASCADE)
+    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL)
     
 
     class Meta:
@@ -43,6 +47,7 @@ class Seats(models.Model):
     row = models.IntegerField()
     column = models.CharField(max_length=3,choices=COLUMN_CHOICES)
     hall = models.ForeignKey(Halls,on_delete=models.CASCADE)
+    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL)
 
     class Meta:
         constraints = [
@@ -50,13 +55,14 @@ class Seats(models.Model):
         ]
 
     def __str__(self) -> str:
-        return self.column + str(self.row) + '-' + str(self.number)
+        return self.hall.__str__() + ":" + self.column + str(self.row) + '-' + str(self.number)
 
 class Show(models.Model):
     start_time = models.DateTimeField()
     cost = models.IntegerField()
     hall = models.ForeignKey(Halls,on_delete=models.CASCADE)
     movie = models.ForeignKey(Movies,on_delete=models.CASCADE)
+    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL)
 
     @staticmethod
     def end_time(self):

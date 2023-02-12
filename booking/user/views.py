@@ -23,6 +23,7 @@ class LoginApi(
     permission_classes = [permissions.AllowAny]
     serializer_class = LoginSerializer
     queryset = User.objects.all()
+    
     def post(self,request):
         
         serializer = AuthTokenSerializer(data=request.data)
@@ -37,6 +38,6 @@ class LoginApi(
 #Logout
 def user_logout(request):
     logout(request)
-    return redirect(reverse("api:User-login"))
+    return redirect(reverse("user:User-login"))
 
 
