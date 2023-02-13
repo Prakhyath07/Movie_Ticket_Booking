@@ -8,6 +8,7 @@ from user.mixins import UserEditSetMixin
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.request import Request
+from django_filters.rest_framework import DjangoFilterBackend
 
 # Create your views here.
 
@@ -29,6 +30,8 @@ class HallsList(generics.ListAPIView):
 class SeatsList(generics.ListAPIView):
     queryset = Seats.objects.all()
     serializer_class = SeatsSerializer
+    filter_backends = [DjangoFilterBackend,]
+    filterset_fields = ['id', 'hall']
 
 class ShowsList(generics.ListAPIView):
     queryset = Show.objects.all()
@@ -65,6 +68,8 @@ class HallsCreate(generics.CreateAPIView):
 class SeatsCreate(generics.CreateAPIView):
     queryset = Seats.objects.all()
     serializer_class = SeatsSerializer
+    filter_backends = [DjangoFilterBackend,]
+    filterset_fields = ['id', 'hall']
 
     def perform_create(self, serializer):
         

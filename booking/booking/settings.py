@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     ## external
     "rest_framework.authtoken",
     "rest_framework",
+    'django_filters',
 
     "Theatre.apps.TheatreConfig",
     "user.apps.UserConfig",
@@ -139,5 +140,6 @@ REST_FRAMEWORK = {
     ],
 
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
-    "PAGE_SIZE" : 10
+    "PAGE_SIZE" : 10,
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }

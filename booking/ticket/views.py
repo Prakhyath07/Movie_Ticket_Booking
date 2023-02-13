@@ -1,16 +1,18 @@
 from django.shortcuts import render, redirect
 from .models import tickets, seat_reserved
 from Theatre.models import Show
-from .serializers import TicketsSerializer, Seat_ReservedSerializer,BookTicketSerializer
+from .serializers import TicketsSerializer,TicketsCreateSerializer, Seat_ReservedSerializer,BookTicketSerializer
 from rest_framework import generics, response
 from rest_framework.reverse import reverse
 import urllib.parse
 from user.mixins import UserQuerySetMixin
+from django_filters.rest_framework import DjangoFilterBackend
+
 # Create your views here.
 
 class TicketsCreate(generics.CreateAPIView):
     queryset = tickets.objects.all()
-    serializer_class = BookTicketSerializer
+    serializer_class = TicketsCreateSerializer
 
     def perform_create(self, serializer):
         serializer.save(user = self.request.user)
@@ -30,10 +32,18 @@ class ReservedSeatsList(UserQuerySetMixin,generics.ListCreateAPIView,
                         ):
     queryset = seat_reserved.objects.all()
     serializer_class = Seat_ReservedSerializer
+    filter_backends = [DjangoFilterBackend,]
+    filterset_fields = ['id', 'show']
+    
+
 
     def perform_create(self, serializer):
         
         serializer.save(user = self.request.user)
+    
+    def get(self, request, *args, **kwargs):
+        print(request.GET)
+        return super().get(request, *args, **kwargs)
 
     
 

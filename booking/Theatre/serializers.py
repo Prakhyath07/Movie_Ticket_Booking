@@ -3,7 +3,7 @@ from rest_framework import serializers
 from user.serializers import UserPublicSerializer
 from rest_framework.reverse import reverse
 from ticket.models import seat_reserved
-
+from django.http import QueryDict
 
 from .validators import validate_min_value
 
@@ -23,6 +23,8 @@ class MovieSerializer(serializers.ModelSerializer):
             "duration",
             "url"
         ]
+        
+        
 
 class MovieDetailSerializer(serializers.ModelSerializer):
 
@@ -45,12 +47,12 @@ class MovieDetailSerializer(serializers.ModelSerializer):
             return None
         if not isinstance(obj, Movies):
             return None
-        print(self.context)
+        # print(self.context)
         request = self.context.get('request')
         shows = Show.objects.filter(movie=obj)
         context={'request': request},
         res = ShowSerializer(shows,many=True,context=context)
-        print(res.data)
+        # print(res.data)
         return res.data
         
 class HallsSerializer(serializers.ModelSerializer):
@@ -77,7 +79,7 @@ class TheatreSerializer(serializers.ModelSerializer):
         ]
 
 class SeatsSerializer(serializers.ModelSerializer):
-    # user = UserPublicSerializer( read_only = True)
+    url = serializers.SerializerMethodField(read_only= True)
     theatre = serializers.CharField(source = 'hall.theatre', required =False,read_only = True)
     
     class Meta:
@@ -90,7 +92,8 @@ class SeatsSerializer(serializers.ModelSerializer):
             "number",
             "hall",
             "theatre",
-            "column"
+            "column",
+            "url"
 
         ]
 
@@ -98,6 +101,29 @@ class SeatsSerializer(serializers.ModelSerializer):
         rep = super().to_representation(instance)
         rep['hall'] = instance.hall.name
         return rep
+    
+    def get_url(self,obj):
+        request = self.context.get('request')
+        seat = obj.id
+        show = self.context.get('show')
+        print(seat)
+        print(show)
+        if request is None:
+            return None
+        query_dictionary = QueryDict('', mutable=True)
+        query_dictionary.update(
+        {
+        'seat': seat,
+        "show":show
+        }
+        )
+        url = '{base_url}?{querystring}'.format(
+            base_url=reverse("tickets:tickets-create", request= request),
+            querystring=query_dictionary.urlencode()
+            )
+        
+        # return reverse("tickets:tickets-create", request= request)
+        return url
 
 class ShowSerializer(serializers.ModelSerializer):
 
@@ -127,9 +153,10 @@ class ShowSerializer(serializers.ModelSerializer):
         return rep
     
     def get_url(self,obj):
-        print(self.context)
+        # print(obj)
+        print(self)
         request = self.context[0].get('request')
-        print(request)
+        # print(request)
         if request is None:
             return None
         return reverse("Theatre:shows-detail", kwargs={"pk":obj.pk}, request= request)
@@ -164,10 +191,11 @@ class ShowDetailSerializer(serializers.ModelSerializer):
             return None
         Hall_instance = Halls.objects.get(pk=obj.hall.id)
         reserved = seat_reserved.objects.filter(show = obj.id).values('seat')
-        print(reserved)
+        # print(reserved)
         seats = Seats.objects.filter(hall=Hall_instance).exclude(id__in=reserved)
-        print(list(seats.values('pk')))
-        res = SeatsSerializer(seats,many=True)
+        # print(list(seats.values('pk')))
+        context={'request': request, "show":obj.id}
+        res = SeatsSerializer(seats,many=True,context=context)
         return res.data
 
 class SeatsReadSerializer(serializers.ModelSerializer):
