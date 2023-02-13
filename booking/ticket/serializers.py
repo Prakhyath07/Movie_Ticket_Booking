@@ -38,8 +38,8 @@ class TicketsCreateSerializer(serializers.ModelSerializer):
         show_instance = Show.objects.get(pk=show)
         seat = request.GET.get("seat")
         seat_instance = Seats.objects.get(pk=seat)
-        ticket_instance = tickets( show=show_instance,user=user)
-        reserved_seat = seat_reserved(seat =seat_instance,user=user,show=show_instance,tickets=ticket_instance)
+        ticket_instance = tickets.objects.create( show=show_instance,user=user)
+        reserved_seat = seat_reserved.objects.create(seat =seat_instance,user=user,show=show_instance,tickets=ticket_instance)
         return ticket_instance
     
     
