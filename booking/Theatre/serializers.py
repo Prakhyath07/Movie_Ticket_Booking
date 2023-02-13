@@ -6,7 +6,11 @@ from .validators import validate_min_value
 
 
 class MovieSerializer(serializers.ModelSerializer):
-    user = UserPublicSerializer( read_only = True)
+    url = serializers.HyperlinkedIdentityField(
+        view_name='Theatre:movies-detail',
+        lookup_field = 'pk'
+    )
+    # user = UserPublicSerializer( read_only = True)
     class Meta:
         model = Movies
 
@@ -14,8 +18,38 @@ class MovieSerializer(serializers.ModelSerializer):
             "title",
             "language",
             "duration",
-            "user"
+            "url"
         ]
+
+class MovieDetailSerializer(serializers.ModelSerializer):
+
+    # shows = serializers.ListField(child =serializers.CharField(max_length=100))
+    shows = serializers.SerializerMethodField(read_only=True)
+
+    url = serializers.HyperlinkedIdentityField(
+        view_name='Theatre:movies-detail',
+        lookup_field = 'pk'
+    )
+    
+    class Meta:
+        model = Movies
+
+        fields = [
+            "title",
+            "language",
+            "duration",
+            "shows"
+        ]
+    
+    def get_shows(self,obj):
+        request = self.context.get('request')
+        if not hasattr(obj, 'id'):
+            return None
+        if not isinstance(obj, Movies):
+            return None
+        shows = Show.objects.filter(movie=obj)
+        res = ShowSerializer(shows,many=True)
+        return res.data
         
 class HallsSerializer(serializers.ModelSerializer):
     user = UserPublicSerializer( read_only = True)

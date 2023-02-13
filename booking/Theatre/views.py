@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from .models import Movies,Theatre,Halls,Seats,Show
 from .serializers import (MovieSerializer, TheatreSerializer,HallsSerializer,
-                        SeatsSerializer,ShowSerializer,LayoutCreateSerializer)
+                        SeatsSerializer,ShowSerializer,LayoutCreateSerializer,MovieDetailSerializer)
 from rest_framework import generics
 from user.mixins import UserEditSetMixin
 
@@ -85,7 +85,16 @@ class LayoutCreate(generics.CreateAPIView):
 
 class MoviesDetail(generics.RetrieveAPIView):
     queryset = Movies.objects.all()
-    serializer_class = MovieSerializer
+    serializer_class = MovieDetailSerializer
+
+    def get(self, request, *args, **kwargs):
+        pk=kwargs.get("pk")
+        # print(pk)
+        return self.retrieve(request, *args, **kwargs)
+
+
+    def get_queryset(self):
+        return super().get_queryset()
 
 class TheatresDetail(generics.RetrieveAPIView):
     queryset = Theatre.objects.all()
