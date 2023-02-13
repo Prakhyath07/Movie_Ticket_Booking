@@ -10,7 +10,7 @@ class Movies(models.Model):
     title = models.CharField(max_length=100,unique=True)
     language = models.CharField(max_length=20,choices=LANGUAGE_CHOICES)
     duration = models.DurationField()
-    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL, related_name='movies')
 
     def __str__(self) -> str:
         return self.title
@@ -18,15 +18,15 @@ class Movies(models.Model):
 class Theatre(models.Model):
     name = models.CharField(max_length=20, unique=True)
     location = models.CharField(max_length=20)
-    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL, related_name='theatres')
 
     def __str__(self) -> str:
         return self.name
 
 class Halls(models.Model):
     name = models.CharField(max_length=20)
-    theatre = models.ForeignKey(Theatre,on_delete= models.CASCADE)
-    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL)
+    theatre = models.ForeignKey(Theatre,on_delete= models.CASCADE,related_name='halls')
+    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL,related_name='halls')
     
 
     class Meta:
@@ -46,8 +46,8 @@ class Seats(models.Model):
     number = models.IntegerField()
     row = models.IntegerField()
     column = models.CharField(max_length=3,choices=COLUMN_CHOICES)
-    hall = models.ForeignKey(Halls,on_delete=models.CASCADE)
-    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL)
+    hall = models.ForeignKey(Halls,on_delete=models.CASCADE,related_name='seats')
+    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL,related_name='seats')
 
     class Meta:
         constraints = [
@@ -60,9 +60,9 @@ class Seats(models.Model):
 class Show(models.Model):
     start_time = models.DateTimeField()
     cost = models.IntegerField()
-    hall = models.ForeignKey(Halls,on_delete=models.CASCADE)
-    movie = models.ForeignKey(Movies,on_delete=models.CASCADE)
-    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL)
+    hall = models.ForeignKey(Halls,on_delete=models.CASCADE,related_name='shows')
+    movie = models.ForeignKey(Movies,on_delete=models.CASCADE,related_name='shows')
+    user = models.ForeignKey(User, default=1, null=True, on_delete=models.SET_NULL,related_name='shows')
 
     @staticmethod
     def end_time(self):

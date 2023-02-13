@@ -4,6 +4,7 @@ from user.serializers import UserPublicSerializer
 from rest_framework.reverse import reverse
 from ticket.models import seat_reserved
 
+
 from .validators import validate_min_value
 
 
@@ -84,7 +85,7 @@ class SeatsSerializer(serializers.ModelSerializer):
         model = Seats
 
         fields = [
-            "id",
+            "pk",
             "row",
             "number",
             "hall",
@@ -162,9 +163,10 @@ class ShowDetailSerializer(serializers.ModelSerializer):
         if not isinstance(obj, Show):
             return None
         Hall_instance = Halls.objects.get(pk=obj.hall.id)
-        reserved = seat_reserved.objects.filter(show = obj.id)
+        reserved = seat_reserved.objects.filter(show = obj.id).values('seat')
         print(reserved)
-        seats = Seats.objects.filter(hall=Hall_instance)
+        seats = Seats.objects.filter(hall=Hall_instance).exclude(id__in=reserved)
+        print(list(seats.values('pk')))
         res = SeatsSerializer(seats,many=True)
         return res.data
 
