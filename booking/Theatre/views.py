@@ -1,9 +1,13 @@
 from django.shortcuts import render
 from .models import Movies,Theatre,Halls,Seats,Show
 from .serializers import (MovieSerializer, TheatreSerializer,HallsSerializer,
-                        SeatsSerializer,ShowSerializer,LayoutCreateSerializer,MovieDetailSerializer)
+                        SeatsSerializer,ShowSerializer,LayoutCreateSerializer,MovieDetailSerializer,
+                        ShowDetailSerializer)
 from rest_framework import generics
 from user.mixins import UserEditSetMixin
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from rest_framework.request import Request
 
 # Create your views here.
 
@@ -87,14 +91,16 @@ class MoviesDetail(generics.RetrieveAPIView):
     queryset = Movies.objects.all()
     serializer_class = MovieDetailSerializer
 
-    def get(self, request, *args, **kwargs):
-        pk=kwargs.get("pk")
-        # print(pk)
-        return self.retrieve(request, *args, **kwargs)
+    # def get(self, request, *args, **kwargs):
+    #     serializer_context = {
+    #         'request': None,
+    #     }
+    #     movie = get_object_or_404(Movies, pk=2)
+    #     print(movie)
+    #     serializer_class = MovieDetailSerializer(self.get_queryset(),many=True,context=serializer_context)
+    #     print(serializer_class.data)
+    #     return Response(serializer_class.data)
 
-
-    def get_queryset(self):
-        return super().get_queryset()
 
 class TheatresDetail(generics.RetrieveAPIView):
     queryset = Theatre.objects.all()
@@ -110,7 +116,17 @@ class SeatsDetail(generics.RetrieveAPIView):
 
 class ShowsDetail(generics.RetrieveAPIView):
     queryset = Show.objects.all()
-    serializer_class = ShowSerializer
+    serializer_class = ShowDetailSerializer
+
+    # def get(self, request, *args, **kwargs):
+    #     serializer_context = {
+    #         'request': None,
+    #     }
+    #     movie = get_object_or_404(Movies, pk=2)
+    #     print(movie)
+    #     serializer_class = ShowSerializer(self.get_queryset(),many=True,context=serializer_context)
+    #     print(serializer_class.data)
+    #     return Response(serializer_class.data)
 
 # class LayoutDetail(generics.RetrieveAPIView):
 #     queryset = Seats.objects.all()

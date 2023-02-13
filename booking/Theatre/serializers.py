@@ -1,6 +1,8 @@
 from .models import Movies,Theatre,Halls,Seats,Show
 from rest_framework import serializers
 from user.serializers import UserPublicSerializer
+from rest_framework.reverse import reverse
+from ticket.models import seat_reserved
 
 from .validators import validate_min_value
 
@@ -25,12 +27,8 @@ class MovieDetailSerializer(serializers.ModelSerializer):
 
     # shows = serializers.ListField(child =serializers.CharField(max_length=100))
     shows = serializers.SerializerMethodField(read_only=True)
-
-    url = serializers.HyperlinkedIdentityField(
-        view_name='Theatre:movies-detail',
-        lookup_field = 'pk'
-    )
     
+
     class Meta:
         model = Movies
 
@@ -42,13 +40,16 @@ class MovieDetailSerializer(serializers.ModelSerializer):
         ]
     
     def get_shows(self,obj):
-        request = self.context.get('request')
         if not hasattr(obj, 'id'):
             return None
         if not isinstance(obj, Movies):
             return None
+        print(self.context)
+        request = self.context.get('request')
         shows = Show.objects.filter(movie=obj)
-        res = ShowSerializer(shows,many=True)
+        context={'request': request},
+        res = ShowSerializer(shows,many=True,context=context)
+        print(res.data)
         return res.data
         
 class HallsSerializer(serializers.ModelSerializer):
@@ -83,10 +84,12 @@ class SeatsSerializer(serializers.ModelSerializer):
         model = Seats
 
         fields = [
+            "id",
             "row",
             "number",
             "hall",
-            "theatre"
+            "theatre",
+            "column"
 
         ]
 
@@ -96,7 +99,12 @@ class SeatsSerializer(serializers.ModelSerializer):
         return rep
 
 class ShowSerializer(serializers.ModelSerializer):
-    # user = UserPublicSerializer( read_only = True)
+
+    # url = serializers.HyperlinkedIdentityField(
+    #     view_name='Theatre:shows-detail',
+    #     lookup_field = 'pk'
+    # )
+    url = serializers.SerializerMethodField(read_only= True)
     theatre = serializers.CharField(source = 'hall.theatre', required =False,read_only = True)
     language = serializers.CharField(source = 'movie.language', required =False,read_only = True)
     class Meta:
@@ -108,7 +116,7 @@ class ShowSerializer(serializers.ModelSerializer):
             "start_time",
             "cost",
             "theatre",
-            "hall",
+            "url",
         ]
 
     def to_representation(self, instance):
@@ -116,6 +124,49 @@ class ShowSerializer(serializers.ModelSerializer):
         rep['hall'] = instance.hall.name
         rep['movie'] = instance.movie.title
         return rep
+    
+    def get_url(self,obj):
+        print(self.context)
+        request = self.context[0].get('request')
+        print(request)
+        if request is None:
+            return None
+        return reverse("Theatre:shows-detail", kwargs={"pk":obj.pk}, request= request)
+
+class ShowDetailSerializer(serializers.ModelSerializer):
+    seats = serializers.SerializerMethodField(read_only=True)
+    theatre = serializers.CharField(source = 'hall.theatre', required =False,read_only = True)
+    language = serializers.CharField(source = 'movie.language', required =False,read_only = True)
+    class Meta:
+        model = Show
+
+        fields = [
+            "movie",
+            "language",
+            "start_time",
+            "cost",
+            "theatre",
+            "seats",
+        ]
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['hall'] = instance.hall.name
+        rep['movie'] = instance.movie.title
+        return rep
+    
+    def get_seats(self,obj):
+        request = self.context.get('request')
+        if not hasattr(obj, 'id'):
+            return None
+        if not isinstance(obj, Show):
+            return None
+        Hall_instance = Halls.objects.get(pk=obj.hall.id)
+        reserved = seat_reserved.objects.filter(show = obj.id)
+        print(reserved)
+        seats = Seats.objects.filter(hall=Hall_instance)
+        res = SeatsSerializer(seats,many=True)
+        return res.data
 
 class SeatsReadSerializer(serializers.ModelSerializer):
     class Meta:
