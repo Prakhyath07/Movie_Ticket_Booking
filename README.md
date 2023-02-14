@@ -4,4 +4,5 @@
 
 1) create account: localhost:8000/user
 
-<img src= r"screenshots\create_user.png"></img>
+
+![user_create](screenshots/create_user.png?raw=true "Create User")
