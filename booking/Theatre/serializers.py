@@ -30,6 +30,7 @@ class MovieDetailSerializer(serializers.ModelSerializer):
 
     # shows = serializers.ListField(child =serializers.CharField(max_length=100))
     shows = serializers.SerializerMethodField(read_only=True)
+    analytics = serializers.SerializerMethodField(read_only = True)
     
 
     class Meta:
@@ -39,7 +40,8 @@ class MovieDetailSerializer(serializers.ModelSerializer):
             "title",
             "language",
             "duration",
-            "shows"
+            "shows",
+            "analytics"
         ]
     
     def get_shows(self,obj):
@@ -54,6 +56,21 @@ class MovieDetailSerializer(serializers.ModelSerializer):
         res = ShowSerializer(shows,many=True,context=context)
         # print(res.data)
         return res.data
+    
+    def get_analytics(self,obj):
+        gmv = 0
+        shows = Movies.objects.get(id=obj.id).shows.all().values('id')
+        tickets_sold = 0
+        for i in shows:
+            show_id =i.get('id')
+            price =Show.objects.get(id=show_id).cost
+            count = seat_reserved.objects.filter(show=show_id).count()
+            cost =price * count
+            gmv +=cost
+            tickets_sold+=count
+
+        
+        return {"gmv":gmv, "num_shows":len(shows),"tickets_sold":tickets_sold}
         
 class HallsSerializer(serializers.ModelSerializer):
     user = UserPublicSerializer( read_only = True)
@@ -80,27 +97,41 @@ class TheatreSerializer(serializers.ModelSerializer):
 
 class SeatsSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField(read_only= True)
-    theatre = serializers.CharField(source = 'hall.theatre', required =False,read_only = True)
+    booked = serializers.SerializerMethodField(read_only= True)
+    # theatre = serializers.CharField(source = 'hall.theatre', required =False,read_only = True)
     
     class Meta:
 
         model = Seats
 
         fields = [
-            "pk",
-            "row",
             "number",
-            "hall",
-            "theatre",
+            "row",
             "column",
-            "url"
+            # "hall",
+            # "theatre",
+            "pk",
+            "url",
+            'booked'
 
         ]
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        rep['hall'] = instance.hall.name
+        # rep['hall'] = instance.hall.name
         return rep
+
+    def get_booked(self,obj):
+        request = self.context.get('request')
+        seat = obj.id
+        show = self.context.get('show')
+        if request is None:
+            return None
+        reserved = seat_reserved.objects.filter(show = show).values('seat')
+        if Seats.objects.filter(pk=seat).filter(id__in=reserved):
+            return True
+        else:
+            return False
     
     def get_url(self,obj):
         request = self.context.get('request')
@@ -192,7 +223,7 @@ class ShowDetailSerializer(serializers.ModelSerializer):
         Hall_instance = Halls.objects.get(pk=obj.hall.id)
         reserved = seat_reserved.objects.filter(show = obj.id).values('seat')
         # print(reserved)
-        seats = Seats.objects.filter(hall=Hall_instance).exclude(id__in=reserved)
+        seats = Seats.objects.filter(hall=Hall_instance).order_by('number')
         # print(list(seats.values('pk')))
         context={'request': request, "show":obj.id}
         res = SeatsSerializer(seats,many=True,context=context)

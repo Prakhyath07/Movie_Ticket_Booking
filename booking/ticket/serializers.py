@@ -43,7 +43,8 @@ class TicketsCreateSerializer(serializers.ModelSerializer):
         return ticket_instance
     
     
-    
+class TicketsListCreateSerializer(serializers.Serializer):
+    tickets =  TicketsCreateSerializer(many = True)   
 
 class BookTicketSerializer(serializers.Serializer):
 

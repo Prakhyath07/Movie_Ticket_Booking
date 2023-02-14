@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from .models import tickets, seat_reserved
 from Theatre.models import Show
-from .serializers import TicketsSerializer,TicketsCreateSerializer, Seat_ReservedSerializer,BookTicketSerializer
+from .serializers import (TicketsSerializer,TicketsCreateSerializer, Seat_ReservedSerializer,
+                    BookTicketSerializer,TicketsListCreateSerializer)
 from rest_framework import generics, response
 from rest_framework.reverse import reverse
 import urllib.parse
