@@ -16,14 +16,22 @@ class Seat_ReservedSerializer(serializers.ModelSerializer):
         fields = [
             "seat",
             "id"]
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['seat'] = instance.seat.__str__()
+        return rep
     
 class TicketsSerializer(serializers.ModelSerializer):
     class Meta:
         model = tickets
         
-        fields = [
-            "show",
-        ]
+        fields = "__all__"
+    
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['show'] = instance.show.__str__()
+        return rep
+
 class TicketsCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = tickets

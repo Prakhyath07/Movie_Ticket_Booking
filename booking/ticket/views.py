@@ -41,10 +41,6 @@ class ReservedSeatsList(UserQuerySetMixin,generics.ListCreateAPIView,
     def perform_create(self, serializer):
         
         serializer.save(user = self.request.user)
-    
-    def get(self, request, *args, **kwargs):
-        print(request.GET)
-        return super().get(request, *args, **kwargs)
 
     
 
@@ -60,7 +56,7 @@ class TicketsList(UserQuerySetMixin,generics.ListAPIView):
 
 class TicketsUpdate(UserQuerySetMixin,generics.RetrieveUpdateDestroyAPIView):
     queryset = tickets.objects.all()
-    serializer_class = BookTicketSerializer
+    serializer_class = TicketsSerializer
 
 class ReservedSeatsUpdate(UserQuerySetMixin,generics.RetrieveUpdateDestroyAPIView,
                         ):

@@ -71,14 +71,60 @@ class MovieDetailSerializer(serializers.ModelSerializer):
 
         
         return {"gmv":gmv, "num_shows":len(shows),"tickets_sold":tickets_sold}
-        
-class HallsSerializer(serializers.ModelSerializer):
-    user = UserPublicSerializer( read_only = True)
+
+class HallsListSerializer(serializers.ModelSerializer):
     location = serializers.CharField(source = 'theatre.location', required =False,read_only = True)
     class Meta:
         model = Halls
 
+        exclude = ["user"]
+
+class HallsSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField(read_only= True)
+    location = serializers.CharField(source = 'theatre.location', required =False,read_only = True)
+    class Meta:
+        model = Halls
+
+        exclude = ["user"]
+
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['theatre'] = instance.theatre.name
+        return rep
+    
+    def get_url(self,obj):
+        # print(obj)
+        print(self)
+        request = self.context[0].get('request')
+        # print(request)
+        if request is None:
+            return None
+        return reverse("Theatre:halls-detail", kwargs={"pk":obj.pk}, request= request)
+
+class HallsViewSerializer(serializers.ModelSerializer):
+    location = serializers.CharField(source = 'theatre.location', required =False,read_only = True)
+    seats = serializers.SerializerMethodField(read_only=True)
+    class Meta:
+        model = Halls
+
         fields = "__all__"
+    
+    def get_seats(self,obj):
+        request = self.context.get('request')
+        print(obj)
+        print(request)
+        if not hasattr(obj, 'id'):
+            return None
+        if not isinstance(obj, Halls):
+            return None
+        
+        seats = Seats.objects.filter(hall=obj).order_by('number')
+        # print(list(seats.values('pk')))
+        context={'request': request, "show":obj.id}
+        res = SeatsViewSerializer(seats,many=True,context=context)
+        return res.data
+
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
@@ -86,19 +132,80 @@ class HallsSerializer(serializers.ModelSerializer):
         return rep
         
 class TheatreSerializer(serializers.ModelSerializer):
-    # user = UserPublicSerializer( read_only = True)
+    url = serializers.HyperlinkedIdentityField(
+        view_name='Theatre:theatres-detail',
+        lookup_field = 'pk'
+    )
     class Meta:
         model = Theatre
 
         fields = [
             "name",
             "location",
+            "url"
         ]
+class TheatreViewSerializer(serializers.ModelSerializer):
+    
+    halls = serializers.SerializerMethodField(read_only=True)
+    class Meta:
+        model = Theatre
+
+        fields = [
+            "name",
+            "location",
+            "halls"
+        ]
+
+
+    def get_halls(self,obj):
+        if not hasattr(obj, 'id'):
+            return None
+        if not isinstance(obj, Theatre):
+            return None
+        print(self.context)
+        request = self.context.get('request')
+        halls = Halls.objects.filter(theatre=obj)
+        context={'request': request},
+        res = HallsSerializer(halls,many=True,context=context)
+        # print(res.data)
+        return res.data
+
+class SeatsUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Seats
+        fields ="__all__"
+        read_only_fields = ['user']
+    
+    
+
+class SeatsViewSerializer(serializers.ModelSerializer):
+    theatre = serializers.CharField(source = 'hall.theatre', required =False,read_only = True)
+    class Meta:
+        model = Seats
+
+        fields = [
+            "number",
+            "row",
+            "column",
+            "hall",
+            "theatre",
+            "pk",
+            "user"
+
+        ]
+
+        read_only_fields = ['user']
 
 class SeatsSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField(read_only= True)
     booked = serializers.SerializerMethodField(read_only= True)
-    # theatre = serializers.CharField(source = 'hall.theatre', required =False,read_only = True)
+
+    def create(self, validated_data):
+        return super().create(validated_data,user = self.context.get('request').user)
+    
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data,user = self.context.get('request').user)
+    
     
     class Meta:
 
@@ -155,6 +262,34 @@ class SeatsSerializer(serializers.ModelSerializer):
         
         # return reverse("tickets:tickets-create", request= request)
         return url
+
+class ShowsCreateSerializer(serializers.ModelSerializer):
+    
+    # theatre = serializers.CharField(source = 'hall.theatre', required =False,read_only = True)
+    # language = serializers.CharField(source = 'movie.language', required =False,read_only = True)
+    class Meta:
+        model = Show
+        exclude =["user"]
+    
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['hall'] = instance.hall.name
+        rep['movie'] = instance.movie.title
+        return rep
+
+class ShowsListSerializer(serializers.ModelSerializer):
+    
+    theatre = serializers.CharField(source = 'hall.theatre', required =False,read_only = True)
+    language = serializers.CharField(source = 'movie.language', required =False,read_only = True)
+    class Meta:
+        model = Show
+        fields = "__all__"
+    
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['hall'] = instance.hall.name
+        rep['movie'] = instance.movie.title
+        return rep
 
 class ShowSerializer(serializers.ModelSerializer):
 
