@@ -19,7 +19,7 @@ click on the highlighted url to get details of the movie.
 
 ![user_create](screenshots/Movies_list.png?raw=true "Movies List")
 
-4) Detail of movie along with available shows:
+4) Detail of movie along with available shows and few analytics like Total collection of the movie, total shows and total tickets sold:
 url: localhost:8000/movies/<int>
 
 click on the highlighted url to get details of the show.
