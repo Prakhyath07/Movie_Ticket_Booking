@@ -42,7 +42,7 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v1
         with:
-          token_format: 'access_token'
+          # token_format: 'access_token'
           credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
         
 
@@ -87,7 +87,7 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v1
         with:
-          token_format: 'access_token'
+          # token_format: 'access_token'
           credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
         
 
