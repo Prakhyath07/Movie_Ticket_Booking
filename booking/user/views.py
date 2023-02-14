@@ -33,7 +33,7 @@ class LoginApi(
         print(serializer.validated_data)
         login(request, user)
         # return HttpResponse({"successful"})
-        return redirect(reverse("Theatre:shows-list"))
+        return redirect(reverse("Theatre:movies-list"))
 
 #Logout
 def user_logout(request):
