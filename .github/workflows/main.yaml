@@ -105,9 +105,9 @@ jobs:
         run: |
          docker pull $GOOGLE_COMPUTE_ZONE-docker.pkg.dev/$GOOGLE_PROJECT_ID/$GAR_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG
          docker tag $GOOGLE_COMPUTE_ZONE-docker.pkg.dev/$GOOGLE_PROJECT_ID/$GAR_REPOSITORY/$IMAGE_NAME:$IMAGE_TAG movie_booking
-      # - name: Stop and remove sensor container if running
-        # run: |
-        #  docker ps -q --filter "name=movie" | grep -q . && docker stop movie && docker rm -fv movie
+      - name: Stop and remove sensor container if running
+        run: |
+         docker ps -q --filter "name=movie" | grep -q . && docker stop movie && docker rm -fv movie
        
       - name: Run Docker Image to serve users
         run: |
