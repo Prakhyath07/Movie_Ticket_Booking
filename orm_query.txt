@@ -1,9 +1,82 @@
-reserved = seat_reserved.objects.filter(show = show).values('seat')
+reserved = seat_reserved.objects.filter(show = 3).values('seat')
 
-filtered =Seats.objects.filter(hall=show.hall.id).exclude(id__in=reserved)
+filtered =Seats.objects.filter(hall=3).exclude(id__in=reserved)
 
 numbered = filtered.annotate(row_num = Window(expression=RowNumber(),partition_by=[F('hall'),F('row'),F('column')],order_by=[F('number')]))
 
 diff=numbered.annotate(diff = F('number')-F('row_num'))  
 
 fin=diff.annotate(cnt = Window(expression=Count(1),partition_by=[F('hall'),F('row'),F('column'),F('diff')]))
+
+
+sql, params = diff.query.sql_with_params()
+
+
+seats_friends = Seats.objects.raw("""
+select * from (
+        SELECT *, count(*) OVER (PARTITION BY hall_id, row,column, diff
+) AS consec_seats FROM ({}) seats_diff
+    ) final where consec_seats=2""".format(sql),
+    [*params],
+)
+ 
+list(seats_friends)
+
+https://blog.oyam.dev/django-filter-by-window-function/
+
+SELECT "Theatre_seats"."id", "Theatre_seats"."number", "Theatre_seats"."row", 
+"Theatre_seats"."column", "Theatre_seats"."hall_id", "Theatre_seats"."user_id", 
+ROW_NUMBER() OVER (PARTITION BY "Theatre_seats"."hall_id", "Theatre_seats"."row", "Theatre_seats"."column" 
+ORDER BY "Theatre_seats"."number") AS "row_num", 
+("Theatre_seats"."number" - ROW_NUMBER() OVER 
+(PARTITION BY "Theatre_seats"."hall_id", "Theatre_seats"."row", "Theatre_seats"."column" 
+ORDER BY "Theatre_seats"."number")) AS "diff", COUNT(1) OVER 
+(PARTITION BY "Theatre_seats"."hall_id", "Theatre_seats"."row", "Theatre_seats"."column", 
+("Theatre_seats"."number" - ROW_NUMBER() OVER 
+(PARTITION BY "Theatre_seats"."hall_id", "Theatre_seats"."row", "Theatre_seats"."column" 
+ORDER BY "Theatre_seats"."number"))) AS "cnt" FROM "Theatre_seats" WHERE 
+("Theatre_seats"."hall_id" = 3 AND NOT 
+("Theatre_seats"."id" IN (SELECT U0."seat_id" FROM "ticket_seat_reserved" U0 WHERE U0."show_id" = 3)))
+
+
+SELECT *, 
+ROW_NUMBER() OVER (PARTITION BY "Theatre_seats"."hall_id", "Theatre_seats"."row", "Theatre_seats"."column" 
+ORDER BY "Theatre_seats"."number") AS "row_num", 
+("Theatre_seats"."number" - ROW_NUMBER() OVER 
+(PARTITION BY "Theatre_seats"."hall_id", "Theatre_seats"."row", "Theatre_seats"."column" 
+ORDER BY "Theatre_seats"."number")) AS "diff", COUNT(1) OVER 
+(PARTITION BY "Theatre_seats"."hall_id", "Theatre_seats"."row", "Theatre_seats"."column", 
+("Theatre_seats"."number" - ROW_NUMBER() OVER 
+(PARTITION BY "Theatre_seats"."hall_id", "Theatre_seats"."row", "Theatre_seats"."column" 
+ORDER BY "Theatre_seats"."number"))) AS "cnt" FROM "Theatre_seats" WHERE 
+("Theatre_seats"."hall_id" = 3 AND NOT 
+("Theatre_seats"."id" IN (SELECT U0."seat_id" FROM "ticket_seat_reserved" U0 WHERE U0."show_id" = 3)))
+
+
+from django.db import connection
+cursor = connection.cursor()
+cursor.execute('''
+with reserved as(
+    SELECT U0."seat_id" FROM "ticket_seat_reserved" U0 WHERE U0."show_id" = 3
+), filtered as(
+ select * from "Theatre_seats" WHERE 
+("Theatre_seats"."hall_id" = 3 AND NOT 
+("Theatre_seats"."id" IN reserved))),
+numbered as(
+SELECT *, 
+ROW_NUMBER() OVER (PARTITION BY hall_id, row,column order by number
+) AS "row_num" from filtered),
+diffs as(
+     select *, (number-row_num) as diff from numbered),
+counts as(
+     select *, count(*) OVER (PARTITION BY hall_id, row,column, diff
+) AS consec_seats
+ from diffs) select * from counts where consec_seats =2
+ ;
+ ''')
+
+ cursor.fetchall()[:2]
+
+
+
+

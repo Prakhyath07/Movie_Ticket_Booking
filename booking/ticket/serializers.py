@@ -5,6 +5,7 @@ from .models import tickets, seat_reserved
 from Theatre.models import Seats,Show
 from django.contrib.auth.models import User
 from user.serializers import UserPublicSerializer
+from Theatre.validators import validate_min_tikcet
 
 
 # User Serializer
@@ -71,3 +72,14 @@ class BookTicketSerializer(serializers.Serializer):
         seat_reserved.objects.create(seat=seat.get('seat'),show=show,tickets=booked_ticket, user=user)
       
         return {"tickets":ticket ,"seat":seat,"user":user}
+
+class multipleticketSerializer(serializers.Serializer):
+
+    count = serializers.IntegerField()
+
+class multipleticketViewSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Seats
+
+        fields = "__all__"

@@ -298,6 +298,7 @@ class ShowSerializer(serializers.ModelSerializer):
     #     lookup_field = 'pk'
     # )
     url = serializers.SerializerMethodField(read_only= True)
+    multi_url = serializers.SerializerMethodField(read_only= True)
     theatre = serializers.CharField(source = 'hall.theatre', required =False,read_only = True)
     language = serializers.CharField(source = 'movie.language', required =False,read_only = True)
     class Meta:
@@ -310,6 +311,7 @@ class ShowSerializer(serializers.ModelSerializer):
             "cost",
             "theatre",
             "url",
+            "multi_url"
         ]
 
     def to_representation(self, instance):
@@ -326,6 +328,26 @@ class ShowSerializer(serializers.ModelSerializer):
         if request is None:
             return None
         return reverse("Theatre:shows-detail", kwargs={"pk":obj.pk}, request= request)
+    
+    def get_multi_url(self,obj):
+        request = self.context[0].get('request')
+        # print(request)
+        if request is None:
+            return None
+        
+        query_dictionary = QueryDict('', mutable=True)
+        query_dictionary.update(
+        {
+        "show":obj.pk
+        }
+        )
+        url = '{base_url}?{querystring}'.format(
+            base_url=reverse("tickets:tickets-multiple", request= request),
+            querystring=query_dictionary.urlencode()
+            )
+        
+        # return reverse("tickets:tickets-multiple", request= request)
+        return url
 
 class ShowDetailSerializer(serializers.ModelSerializer):
     seats = serializers.SerializerMethodField(read_only=True)
