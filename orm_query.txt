@@ -1,0 +1,9 @@
+reserved = seat_reserved.objects.filter(show = show).values('seat')
+
+filtered =Seats.objects.filter(hall=show.hall.id).exclude(id__in=reserved)
+
+numbered = filtered.annotate(row_num = Window(expression=RowNumber(),partition_by=[F('hall'),F('row'),F('column')],order_by=[F('number')]))
+
+diff=numbered.annotate(diff = F('number')-F('row_num'))  
+
+fin=diff.annotate(cnt = Window(expression=Count(1),partition_by=[F('hall'),F('row'),F('column'),F('diff')]))

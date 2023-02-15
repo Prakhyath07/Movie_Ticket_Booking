@@ -399,4 +399,4 @@ class LayoutCreateSerializer(serializers.Serializer):
         
         return {"num_seats_per_row":num_seats_per_row ,"num_rows":num_rows,"seat":hall}
 
-    
+
