@@ -49,6 +49,8 @@ class ReservedSeatsList(UserQuerySetMixin,generics.ListCreateAPIView,
 
     
 
+    
+
     # def get_queryset(self):
     #     qs = seat_reserved.objects.all()
     #     show =self.request.GET.get('show')
@@ -167,7 +169,7 @@ class multipleticets(UserQuerySetMixin,generics.CreateAPIView):
             querystring=query_dictionary.urlencode()
             )
             count =int(self.request.POST.get('count'))
-            return response.Response({"output":f"{count} tickets successfully booked"})
+            return response.Response({"output":f"{count} tickets successfully booked:{output}"})
 
 
 class multipleseatbook(generics.CreateAPIView):
