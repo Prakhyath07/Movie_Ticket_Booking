@@ -38,6 +38,11 @@ click on the highlighted url to book that particular seat (cannot book the seats
 
 ![user_create](screenshots/Book_ticket.png?raw=true "Book Ticket")
 
+7) For booking multiple seats click on multi url in show detail page:
+    In the next page you will be prompted to enter the number of seats you would like to book and submitting it will book the seats such that there is no gap between seats and if such seats are not available it will show other movie and its timing where seats are available together
+
+![user_create](screenshots/multiple.png?raw=true "Multiple Ticket")
+
 
 ### Endpoints for CRUD of movie, theatre, layout...:
 
