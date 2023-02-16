@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
 from .models import tickets, seat_reserved
 from Theatre.models import Show,Seats
+from Theatre.serializers import SeatsViewSerializer
 from .serializers import (TicketsSerializer,TicketsCreateSerializer, Seat_ReservedSerializer
-                        ,multipleticketSerializer,multipleticketViewSerializer)
+                        ,multipleticketSerializer,multipleticketBookSerializer)
 from rest_framework import generics, response
 from rest_framework.reverse import reverse
 from user.mixins import UserQuerySetMixin
@@ -10,6 +11,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models.expressions import Window
 from django.db.models.functions import RowNumber
 from django.db.models import F,Count
+from django.forms.models import model_to_dict
+from django.http import QueryDict
 
 # Create your views here.
 
@@ -65,11 +68,11 @@ class ReservedSeatsUpdate(UserQuerySetMixin,generics.RetrieveUpdateDestroyAPIVie
     queryset = seat_reserved.objects.all()
     serializer_class = Seat_ReservedSerializer
 
-class multipleticets(generics.CreateAPIView):
+class multipleticets(UserQuerySetMixin,generics.CreateAPIView):
     queryset = tickets.objects.all()
     serializer_class = multipleticketSerializer
 
-    def perform_create(self, serializer):
+    def multi_ticket(self, serializer):
         # serializer.save(user = self.request.user)
         show=self.request.GET.get('show')
         count =int(self.request.POST.get('count'))
@@ -119,24 +122,62 @@ class multipleticets(generics.CreateAPIView):
                 )
 
                 if len(other_seats_friends)>0:
-                    output = "As {} tickets are not available for this show you can try: {}".format(count,list(other_seats_friends)[:count])
-                    break
+                    print(i.movie, i.start_time)
+                    output = f"As {count} no. of tickets are not available for this show you can checkout the movie {i.movie} at time {i.start_time}"
+                    return output
             else:
                 output = f"{count} number of tickets are not available for any show"
+                return output
         
         else:
             output= list(seats_friends)[:count]
+            # output = Seats.objects.filter(hall=3)
+            # print(output[0].id)
+            # # qs_dict = model_to_dict(seats_friends)
+            serializer = SeatsViewSerializer(output,many=True)
+            print(serializer.data)
+            
+            return serializer.data
         
-    def post(self,request):
-        print("in")
-        return redirect(reverse("tickets:tickets-multipleview"),data=self.output)
-
-
-class multipleViewtickets(generics.ListCreateAPIView):
-    queryset = Seats.objects.all()
-    serializer_class = multipleticketViewSerializer
-
     def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
+        output = self.multi_ticket(request)
+        if isinstance(output,str):
+            return response.Response({"output":output})
+        
+        else:
+            seat =[]
+            show=self.request.GET.get('show')
+            show_instance =Show.objects.get(pk=show)
+            user = self.request.user
+            print("user",user)
+            booked_ticket=tickets.objects.create(show=show_instance,user=user)
+            for i in output:
+                seat.append(i.get('pk'))
+                seat_instance = Seats.objects.get(pk =i.get('pk') )
+                seat_reserved.objects.create(seat=seat_instance,show=show_instance,tickets=booked_ticket, user=user)
+            query_dictionary = QueryDict('', mutable=True)
+            query_dictionary.update(
+            {
+            'seat': seat,
+            "show":show
+            }
+            )
+            url = '{base_url}?{querystring}'.format(
+            base_url=reverse("tickets:tickets-multiplecreate", request= request),
+            querystring=query_dictionary.urlencode()
+            )
+            count =int(self.request.POST.get('count'))
+            return response.Response({"output":f"{count} tickets successfully booked"})
+
+
+class multipleseatbook(generics.CreateAPIView):
+
+    queryset = Seats.objects.all()
+    serializer_class = multipleticketBookSerializer
+
+    
+
+    
+
 
     

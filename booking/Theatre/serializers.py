@@ -384,6 +384,7 @@ class ShowDetailSerializer(serializers.ModelSerializer):
         # print(list(seats.values('pk')))
         context={'request': request, "show":obj.id}
         res = SeatsSerializer(seats,many=True,context=context)
+        print(res.data)
         return res.data
 
 class SeatsReadSerializer(serializers.ModelSerializer):

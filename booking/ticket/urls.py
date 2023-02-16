@@ -10,5 +10,5 @@ urlpatterns = [
     path("reserved_seats/<int:pk>", views.ReservedSeatsUpdate.as_view(), name="reserved_seats-update"),
     path("ticketsupdate/<int:pk>", views.TicketsUpdate.as_view(), name="tickets-update"),
     path("multiple/", views.multipleticets.as_view(), name="tickets-multiple"),
-    path("multipleview/", views.multipleViewtickets.as_view(), name="tickets-multipleview"),
+    path("multiplecreate/", views.multipleseatbook.as_view(), name="tickets-multiplecreate"),
 ]

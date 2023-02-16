@@ -77,9 +77,16 @@ class multipleticketSerializer(serializers.Serializer):
 
     count = serializers.IntegerField()
 
-class multipleticketViewSerializer(serializers.ModelSerializer):
+class multipleticketBookSerializer(serializers.ModelSerializer):
+
+    book_seats = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Seats
 
-        fields = "__all__"
+        fields = ["book_seats"]
+    
+    def get_book_seats(self,obj):
+        request = self.context.get("request")
+        print(request.GET)
+        return 1
